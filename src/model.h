@@ -11,11 +11,11 @@ private:
     std::vector<std::vector<int>> faces_;
 
 public:
-    Model(const char *filename);
+    explicit Model(const char *filename);
     ~Model();
-    int nverts();
-    int nfaces();
-    Vec3f vert(int i);
+    int nverts() const;
+    int nfaces() const;
+    Vec3f vert(int i) const;
     std::vector<int> face(int idx);
 };
 
