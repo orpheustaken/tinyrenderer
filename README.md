@@ -11,6 +11,8 @@ I am following the [Wiki](https://github.com/ssloy/tinyrenderer/wiki) to learn m
   <img src="https://raw.githubusercontent.com/ssloy/tinyrenderer/gh-pages/img/01-bresenham/5da6818190.png"/>
 </div>
 
+---
+
 References
 - [Bresenham's line algorithm](https://en.m.wikipedia.org/wiki/Bresenham's_line_algorithm)
 - [Graphics Book](https://math.hws.edu/graphicsbook/c6/s3.html)
