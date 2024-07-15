@@ -12,6 +12,5 @@ I am following the [Wiki](https://github.com/ssloy/tinyrenderer/wiki) to learn m
 </div>
 
 References
-- (Bresenham's line algorithm)[https://en.m.wikipedia.org/wiki/Bresenham's_line_algorithm]
-- (Graphics Book)[https://math.hws.edu/graphicsbook/c6/s3.html]
-
+- [Bresenham's line algorithm](https://en.m.wikipedia.org/wiki/Bresenham's_line_algorithm)
+- [Graphics Book](https://math.hws.edu/graphicsbook/c6/s3.html)
