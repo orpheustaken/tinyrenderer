@@ -3,4 +3,6 @@
 
 # Builds
 build/
-framebuffer.tga
+
+# Output Images
+*.tga
