@@ -16,3 +16,8 @@ I am following the [Wiki](https://github.com/ssloy/tinyrenderer/wiki) to learn m
 References
 - [Bresenham's line algorithm](https://en.m.wikipedia.org/wiki/Bresenham's_line_algorithm)
 - [Graphics Book](https://math.hws.edu/graphicsbook/c6/s3.html)
+- [Cartesian coordinate system](https://en.m.wikipedia.org/wiki/Cartesian_coordinate_system)
+- [UV Mapping](https://en.m.wikipedia.org/wiki/UV_mapping)
+- [Barycentric coordinate system](https://en.m.wikipedia.org/wiki/Barycentric_coordinate_system)
+- [Cross product](https://en.m.wikipedia.org/wiki/Cross_product)
+- [Back-face culling](https://en.m.wikipedia.org/wiki/Back-face_culling)

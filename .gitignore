@@ -1,6 +1,8 @@
-# Clion
+ Clion
 .idea/
 
 # Builds
 build/
-framebuffer.tga
+
+# Output Images
+*.tga
