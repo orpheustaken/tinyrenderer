@@ -9,6 +9,7 @@ I am following the [Wiki](https://github.com/ssloy/tinyrenderer/wiki) to learn m
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/ssloy/tinyrenderer/gh-pages/img/01-bresenham/5da6818190.png"/>
+  <img src="https://github.com/user-attachments/assets/b5cde276-1a0f-486c-ba48-f781a6c7093b"/>
 </div>
 
 ---
@@ -21,3 +22,5 @@ References
 - [Barycentric coordinate system](https://en.m.wikipedia.org/wiki/Barycentric_coordinate_system)
 - [Cross product](https://en.m.wikipedia.org/wiki/Cross_product)
 - [Back-face culling](https://en.m.wikipedia.org/wiki/Back-face_culling)
+- [Painter's algorithm](https://en.m.wikipedia.org/wiki/Painter%27s_algorithm)
+- [Binary space partitioning](https://en.m.wikipedia.org/wiki/Binary_space_partitioning)
