@@ -24,3 +24,4 @@ References
 - [Back-face culling](https://en.m.wikipedia.org/wiki/Back-face_culling)
 - [Painter's algorithm](https://en.m.wikipedia.org/wiki/Painter%27s_algorithm)
 - [Binary space partitioning](https://en.m.wikipedia.org/wiki/Binary_space_partitioning)
+- [Z-buffering](https://en.m.wikipedia.org/wiki/Z-buffering)
