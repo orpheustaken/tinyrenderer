@@ -8,11 +8,12 @@
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
+const TGAColor blue = TGAColor(0, 0, 255, 255);
 
 Model *model = nullptr;
 
 constexpr int width = 800;
-constexpr int height = 800;
+constexpr int height = 500;
 
 // TODO: Add asserts and checks on going beyond the borders of the image
 // https://en.m.wikipedia.org/wiki/Bresenham's_line_algorithm
@@ -101,52 +102,113 @@ void draw_triangle(Vec2i *pts, const TGAImage &image, const TGAColor &color)
     }
 }
 
+void rasterize(Vec2i p0, Vec2i p1, const TGAImage &image, const TGAColor &color, int ybuffer[])
+{
+    if (p0.x > p1.x)
+    {
+        std::swap(p0, p1);
+    }
+    for (int x = p0.x; x <= p1.x; x++)
+    {
+        float t = (x - p0.x) / (float)(p1.x - p0.x);
+        int y = p0.y * (1. - t) + p1.y * t + .5;
+        if (ybuffer[x] < y)
+        {
+            ybuffer[x] = y;
+            image.set(x, 0, color);
+        }
+    }
+}
+
 int main(const int argc, char **argv)
 {
-    if (argc < 2)
-    {
-        std::cout << "Please, provide an object file to be rendered." << std::endl;
-        return 1;
-    }
+    // if (argc < 2)
+    // {
+    // std::cout << "Please, provide an object file to be rendered." << std::endl;
+    // return 1;
+    // }
 
-    model = new Model(argv[1]);
+    // model = new Model(argv[1]);
 
-    TGAImage image(width, height, TGAImage::RGB);
+    // TGAImage image(width, height, TGAImage::RGB);
 
-    const Vec3f light_dir(0, 0, -1);
+    // const Vec3f light_dir(0, 0, -1);
 
     // flat shading render
     // https://en.m.wikipedia.org/wiki/Back-face_culling
-    for (int i = 0; i < model->nfaces(); i++)
-    {
-        std::vector<int> face = model->face(i);
-        Vec2i screen_coords[3];
-        Vec3f world_coords[3];
-        for (int j = 0; j < 3; j++)
-        {
-            Vec3f v = model->vert(face[j]);
-            screen_coords[j] = Vec2i((v.x + 1.) * width / 2., (v.y + 1.) * height / 2.);
-            world_coords[j] = v;
-        }
-        Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
-        n.normalize();
-        float intensity = n * light_dir;
-        if (intensity > 0)
-        {
-            draw_triangle(screen_coords, image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
-        }
-    }
+    // for (int i = 0; i < model->nfaces(); i++)
+    // {
+    // std::vector<int> face = model->face(i);
+    // Vec2i screen_coords[3];
+    // Vec3f world_coords[3];
+    // for (int j = 0; j < 3; j++)
+    // {
+    // Vec3f v = model->vert(face[j]);
+    // screen_coords[j] = Vec2i((v.x + 1.) * width / 2., (v.y + 1.) * height / 2.);
+    // world_coords[j] = v;
+    // }
+    // Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
+    // n.normalize();
+    // float intensity = n * light_dir;
+    // if (intensity > 0)
+    // {
+    // draw_triangle(screen_coords, image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
+    // }
+    // }
 
     // origin of y at the left bottom corner of the image
-    const bool flip_result = image.flip_vertically();
+    // const bool flip_result = image.flip_vertically();
 
-    image.write_tga_file("img_output.tga");
-    delete model;
+    // image.write_tga_file("img_output.tga");
+    // delete model;
 
-    if (flip_result)
+    // if (flip_result)
+    // {
+    // return 0;
+    // }
+
+    // return 2;
+
+    /*
+     *
+     *
+     * Lesson 3
+     *
+     *
+     */
+
+    // just dumping the 2d scene (yay we have enough dimensions!)
+    // TGAImage scene(width, height, TGAImage::RGB);
+
+    // scene "2d mesh"
+    // draw_line(20, 34, 744, 400, scene, red);
+    // draw_line(120, 434, 444, 400, scene, green);
+    // draw_line(330, 463, 594, 200, scene, blue);
+
+    // screen line
+    // draw_line(10, 10, 790, 10, scene, white);
+
+    // scene.flip_vertically(); // i want to have the origin at the left bottom corner of the image
+    // scene.write_tga_file("img_output.tga");
+
+    /*
+     *
+     *
+     * Y-buffer
+     *
+     *
+     */
+
+    TGAImage render(width, 1, TGAImage::RGB);
+    int ybuffer[width];
+    for (int &i : ybuffer)
     {
-        return 0;
+        i = std::numeric_limits<int>::min();
     }
 
-    return 2;
+    rasterize(Vec2i(20, 34), Vec2i(744, 400), render, red, ybuffer);
+    rasterize(Vec2i(120, 434), Vec2i(444, 400), render, green, ybuffer);
+    rasterize(Vec2i(330, 463), Vec2i(594, 200), render, blue, ybuffer);
+
+    render.write_tga_file("img_output.tga");
 }
