@@ -14,7 +14,9 @@ I am following the [Wiki](https://github.com/ssloy/tinyrenderer/wiki) to learn m
 
 ---
 
-References
+### References
+
+Read
 - [Bresenham's line algorithm](https://en.m.wikipedia.org/wiki/Bresenham's_line_algorithm)
 - [Graphics Book](https://math.hws.edu/graphicsbook/c6/s3.html)
 - [Cartesian coordinate system](https://en.m.wikipedia.org/wiki/Cartesian_coordinate_system)
@@ -25,3 +27,7 @@ References
 - [Painter's algorithm](https://en.m.wikipedia.org/wiki/Painter%27s_algorithm)
 - [Binary space partitioning](https://en.m.wikipedia.org/wiki/Binary_space_partitioning)
 - [Z-buffering](https://en.m.wikipedia.org/wiki/Z-buffering)
+
+Watch
+- [Essence of Linear Algebra](https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab)
+- [How do Video Game Graphics Work?](https://www.youtube.com/watch?v=C8YtdC8mxTU&list=WL&index=15)
