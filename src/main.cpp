@@ -13,7 +13,15 @@ const TGAColor blue = TGAColor(0, 0, 255, 255);
 Model *model = nullptr;
 
 constexpr int width = 800;
-constexpr int height = 500;
+constexpr int height = 800;
+
+// Cross Product
+// https://en.m.wikipedia.org/wiki/Cross_product
+Vec3f cross(const Vec3f &v1, const Vec3f &v2)
+{
+    return Vec3f(v1.raw[1] * v2.raw[2] - v1.raw[2] * v2.raw[1], v1.raw[2] * v2.raw[0] - v1.raw[0] * v2.raw[2],
+                 v1.raw[0] * v2.raw[1] - v1.raw[1] * v2.raw[0]);
+}
 
 // TODO: Add asserts and checks on going beyond the borders of the image
 // https://en.m.wikipedia.org/wiki/Bresenham's_line_algorithm
@@ -34,7 +42,7 @@ void draw_line(int x0, int y0, int x1, int y1, const TGAImage &image, const TGAC
     const int dx = x1 - x0;
     const int dy = y1 - y0;
     // float derror = std::abs(dy/float(dx));
-    // multipling by 2 allows the code not to use floating points
+    // multiplying by 2 allows the code not to use floating points
     int derror = std::abs(dy) * 2;
     int error = 0;
     int y = y0;
@@ -62,42 +70,63 @@ void draw_line(int x0, int y0, int x1, int y1, const TGAImage &image, const TGAC
 }
 
 // https://en.m.wikipedia.org/wiki/Barycentric_coordinate_system
-Vec3f barycentric(Vec2i *pts, Vec2i P)
+Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P)
 {
-    const Vec3f u = Vec3f(pts[2].raw[0] - pts[0].raw[0], pts[1].raw[0] - pts[0].raw[0], pts[0].raw[0] - P.raw[0]) ^
-        Vec3f(pts[2].raw[1] - pts[0].raw[1], pts[1].raw[1] - pts[0].raw[1], pts[0].raw[1] - P.raw[1]);
+    Vec3f s[2];
+
+    for (int i = 2; i--;)
+    {
+        s[i].raw[0] = C.raw[i] - A.raw[i];
+        s[i].raw[1] = B.raw[i] - A.raw[i];
+        s[i].raw[2] = A.raw[i] - P.raw[i];
+    }
+
+    Vec3f u = cross(s[0], s[1]);
+
     // pts and P has integer value as coordinates
     // so abs(u[2]) < 1 means u[2] is 0, that means
     // triangle is degenerate, in this case return something with negative coordinates
-    if (std::abs(u.z) < 1)
-        return {-1, 1, 1};
-    // return Vec3f(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
-    // as per clang-tidy: return braced initializer instead of declared type
-    return {1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z};
+
+    if (std::abs(u.raw[2]) > 1e-2) // don't forget that u[2] is integer. If it is zero then triangle ABC is degenerate
+        return Vec3f(1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
+
+    // return Vec3f(-1,1,1);
+    // as per clang-tidy: return braced initializer instead of declared typeA
+    return {-1, 1, 1}; // in this case generate negative coordinates, it will be thrown away by the rasterizer
 }
 
-// https://en.m.wikipedia.org/wiki/Cross_product
-void draw_triangle(Vec2i *pts, const TGAImage &image, const TGAColor &color)
+// the idea is to take the barycentric coordinates version of triangle rasterization, and for every pixel we want to
+// draw simply to multiply its barycentric coordinates by the z-values of the vertices of the triangle we rasterize
+
+void draw_triangle(Vec3f *screen_coords, float *zbuffer, const TGAImage &image, const TGAColor &color)
 {
-    Vec2i bboxmin(image.get_width() - 1, image.get_height() - 1);
-    Vec2i bboxmax(0, 0);
-    const Vec2i clamp(image.get_width() - 1, image.get_height() - 1);
+    Vec2f bboxmin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    Vec2f clamp(image.get_width() - 1, image.get_height() - 1);
+
     for (int i = 0; i < 3; i++)
     {
-        bboxmin.x = std::max(0, std::min(bboxmin.x, pts[i].x));
-        bboxmin.y = std::max(0, std::min(bboxmin.y, pts[i].y));
-
-        bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, pts[i].x));
-        bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, pts[i].y));
+        bboxmin.x = std::max(0.f, std::min(bboxmin.x, static_cast<float>(screen_coords[i].x)));
+        bboxmin.y = std::max(0.f, std::min(bboxmin.y, static_cast<float>(screen_coords[i].y)));
+        bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, static_cast<float>(screen_coords[i].x)));
+        bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, static_cast<float>(screen_coords[i].y)));
     }
-    Vec2i P;
+    Vec3f P;
     for (P.x = bboxmin.x; P.x <= bboxmax.x; P.x++)
     {
         for (P.y = bboxmin.y; P.y <= bboxmax.y; P.y++)
         {
-            if (const Vec3f bc_screen = barycentric(pts, P); bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
+            Vec3f bc_screen = barycentric(screen_coords[0], screen_coords[1], screen_coords[2], P);
+            if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
                 continue;
-            image.set(P.x, P.y, color);
+            P.z = 0;
+            for (int i = 0; i < 3; i++)
+                P.z += screen_coords[i].raw[2] * bc_screen.raw[i];
+            if (zbuffer[int(P.x + P.y * width)] < P.z)
+            {
+                zbuffer[int(P.x + P.y * width)] = P.z;
+                image.set(P.x, P.y, color);
+            }
         }
     }
 }
@@ -120,95 +149,64 @@ void rasterize(Vec2i p0, Vec2i p1, const TGAImage &image, const TGAColor &color,
     }
 }
 
+Vec3f world2screen(Vec3f v)
+{
+    return Vec3f(int((v.x + 1.) * width / 2. + .5), int((v.y + 1.) * height / 2. + .5), v.z);
+}
+
 int main(const int argc, char **argv)
 {
-    // if (argc < 2)
-    // {
-    // std::cout << "Please, provide an object file to be rendered." << std::endl;
-    // return 1;
-    // }
+    if (argc < 2)
+    {
+        std::cout << "Please, provide an object file to be rendered." << std::endl;
+        return 1;
+    }
 
-    // model = new Model(argv[1]);
+    model = new Model(argv[1]);
 
-    // TGAImage image(width, height, TGAImage::RGB);
+    TGAImage image(width, height, TGAImage::RGB);
 
-    // const Vec3f light_dir(0, 0, -1);
+    const Vec3f light_dir(0, 0, -1);
+
+    // z-buffer
+    // https://en.m.wikipedia.org/wiki/Z-buffering
+    float *zbuffer = new float[width * height];
+    for (int i = width * height; i--; zbuffer[i] = -std::numeric_limits<float>::max())
+        ;
 
     // flat shading render
     // https://en.m.wikipedia.org/wiki/Back-face_culling
-    // for (int i = 0; i < model->nfaces(); i++)
-    // {
-    // std::vector<int> face = model->face(i);
-    // Vec2i screen_coords[3];
-    // Vec3f world_coords[3];
-    // for (int j = 0; j < 3; j++)
-    // {
-    // Vec3f v = model->vert(face[j]);
-    // screen_coords[j] = Vec2i((v.x + 1.) * width / 2., (v.y + 1.) * height / 2.);
-    // world_coords[j] = v;
-    // }
-    // Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
-    // n.normalize();
-    // float intensity = n * light_dir;
-    // if (intensity > 0)
-    // {
-    // draw_triangle(screen_coords, image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
-    // }
-    // }
-
-    // origin of y at the left bottom corner of the image
-    // const bool flip_result = image.flip_vertically();
-
-    // image.write_tga_file("img_output.tga");
-    // delete model;
-
-    // if (flip_result)
-    // {
-    // return 0;
-    // }
-
-    // return 2;
-
-    /*
-     *
-     *
-     * Lesson 3
-     *
-     *
-     */
-
-    // just dumping the 2d scene (yay we have enough dimensions!)
-    // TGAImage scene(width, height, TGAImage::RGB);
-
-    // scene "2d mesh"
-    // draw_line(20, 34, 744, 400, scene, red);
-    // draw_line(120, 434, 444, 400, scene, green);
-    // draw_line(330, 463, 594, 200, scene, blue);
-
-    // screen line
-    // draw_line(10, 10, 790, 10, scene, white);
-
-    // scene.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-    // scene.write_tga_file("img_output.tga");
-
-    /*
-     *
-     *
-     * Y-buffer
-     *
-     *
-     */
-
-    TGAImage render(width, 1, TGAImage::RGB);
-    int ybuffer[width];
-    for (int &i : ybuffer)
+    for (int i = 0; i < model->nfaces(); i++)
     {
-        i = std::numeric_limits<int>::min();
+        std::vector<int> face = model->face(i);
+        Vec3f world_coords[3];
+        for (int j = 0; j < 3; j++)
+        {
+            Vec3f v = model->vert(face[j]);
+            world_coords[j] = v;
+        }
+        Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
+        n.normalize();
+        float intensity = n * light_dir;
+        Vec3f pts[3];
+        for (int i = 0; i < 3; i++)
+            pts[i] = world2screen(model->vert(face[i]));
+        if (intensity > 0)
+        {
+            draw_triangle(pts, zbuffer, image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
+        }
     }
 
-    rasterize(Vec2i(20, 34), Vec2i(744, 400), render, red, ybuffer);
-    rasterize(Vec2i(120, 434), Vec2i(444, 400), render, green, ybuffer);
-    rasterize(Vec2i(330, 463), Vec2i(594, 200), render, blue, ybuffer);
+    // origin of y at the left bottom corner of the image
+    const bool flip_result = image.flip_vertically();
 
-    render.write_tga_file("img_output.tga");
+    image.write_tga_file("img_output.tga");
+    delete model;
+
+    if (flip_result)
+    {
+        return 0;
+    }
+
+    return 2;
 }
