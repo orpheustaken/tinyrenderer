@@ -10,6 +10,7 @@ I am following the [Wiki](https://github.com/ssloy/tinyrenderer/wiki) to learn m
 <div align="center">
   <img src="https://raw.githubusercontent.com/ssloy/tinyrenderer/gh-pages/img/01-bresenham/5da6818190.png"/>
   <img src="https://github.com/user-attachments/assets/b5cde276-1a0f-486c-ba48-f781a6c7093b"/>
+  <img src="https://github.com/user-attachments/assets/91df2ee3-75cc-4b0f-8bc9-a15ed628fce9"/>
 </div>
 
 ---
